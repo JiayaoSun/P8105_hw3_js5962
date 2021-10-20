@@ -15,6 +15,7 @@ library(p8105.datasets)
 
 **Problem 1**
 
+a) How many aisles are there, and which aisles are the most items ordered from?
 ```{r 1a}
 data("instacart")
 
@@ -22,12 +23,11 @@ data("instacart")
 instacart %>%
   count(aisle) %>%
   arrange(desc(n))
-
 ```
 
-134 aisles in total.
+_Comment:_ 134 aisles in total.
 
-Then, make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
+b) Then, make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
 
 
 ```{r 1b}
@@ -49,7 +49,9 @@ instacart %>%
     caption = "limit aisles with more than 10,000 items ordered")
 ```
 
-Next, make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+_Comment:_ Among aisles with more than 10,000 items ordered, top three ordered aisles are Fresh vegetables, Fresh fruits, and packaged vegetables and fruits; butter has smallest number of items ordered.
+
+c) Next, make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
 
 ```{r 1c}
 instacart %>% 
@@ -64,7 +66,9 @@ instacart %>%
 	knitr::kable()
 ```
 
-Next, make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
+_Comment:_ n represents for the number of product ordered. Rank means the rank of products in its aisles. We can find that suger and soda are most popular in baking ingredients. Dog food care sells most in chicken & rice recipe. Packaged vagetables fruits sells most in organic foods, especially organic baby spinach.
+
+d) Next, make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
 
 ```{r 1d, message = FALSE, warning = FALSE}
 instacart %>% 
@@ -77,10 +81,38 @@ instacart %>%
 		names_from = order_dow,
 		values_from = mean_hour
 	) %>%
+  rename(Sunday = "0", Monday = "1", Tuesday = "2", Wednesday = "3", Thursday = "4", Friday = "5", Saturday = "6") %>% 
   knitr::kable()
 ```
 
+_Comment:_ Compared to sale in weekend and friday, coffee ice cream sales more on Monday to Thursay. Pink lady apples sale most in Wednesday and least in Monday.
+
 ***A short description of the data set***
+
+The data instacart is a clean and imited version of he original data collected from online grocery instarcart. The dataset contains `r count(instacart)` observations of 131,209 unique users, where each row in the dataset is a product from an order. 
+There is a single order per user in this dataset.
+
+There are 15 variables in this dataset, following are the key variables:
+
+order_id: order identifier
+
+product_id: product identifier
+
+reordered: 1 if this prodcut has been ordered by this user in the past, 0 otherwise
+
+order_dow: the day of the week on which the order was placed
+
+order_hour_of_day: the hour of the day on which the order was placed
+
+days_since_prior_order: days since the last order, capped at 30, NA if order_number=1
+
+product_name: name of the product
+
+aisle_id: aisle identifier
+
+department_id: department identifier
+
+Through observation above, we know that there are 134 aisles in total, in which aisle fresh vegetables has most orders and fresh fruit the second, which shows that customers use instacart more on fresh and uncooked food. We could advance the marketing on those popular aisles and give coupons of low sale products in case of piling stocks. Meanwhile, we could find out the popular products in each aisle and explore whether ther exists pattern on those products, such as analyzing the order fluctuation according to day of the week.
 
 **Problem 2**
 
