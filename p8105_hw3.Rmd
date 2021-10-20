@@ -99,7 +99,7 @@ brfss_df =
   response = forcats::fct_relevel(response, c("Poor", "Fair", "Good", "Very good", "Excellent")))
 ```
 
-In 2002, which states were observed at 7 or more locations? What about in 2010?
+a) In 2002, which states were observed at 7 or more locations? What about in 2010?
 
 ```{r 2a}
 # in 2002
@@ -125,7 +125,7 @@ brfss_df %>%
 
 _Comment:_ 6 states were observed at 7 or more locations in 2002. 14 states were observed at 7 or more locations in 2010, which is larger compared to 2002.
 
-Next, construct a data set that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
+b) Next, construct a data set that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
 
 ```{r 2b}
 brfss_excellent =
@@ -148,7 +148,7 @@ ggplot(aes(x = year, y = average_data_value, group = locationabbr, color = locat
 
 _Comment:_ The average data value of most states has a slightly decrease with fluctuation from 2002 to 2010. However, West Virginia has an obvious drop down in 2005.
 
-Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
+c) Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
 
 ```{r 2c}
 brfss_df %>%
@@ -169,6 +169,80 @@ _Comment:_ For both years, response "very good" occupied most and "Poor" occupie
 **Problem 3**
 
 Accelerometers have become an appealing alternative to self-report techniques for studying physical activity in observational studies and clinical trials, largely because of their relative objectivity. During observation periods, the devices measure “activity counts” in a short period; one-minute intervals are common. Because accelerometers can be worn comfortably and unobtrusively, they produce around-the-clock observations.
-```{r}
 
+a) Load, tidy, and otherwise wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes. Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
+
+```{r 3a}
+accel_df = read_csv(file = "./accel_data.csv")
+accel_tidy = janitor::clean_names(accel_df) %>%
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "minutecount_in_24_hours",
+    values_to = "activity_count",
+    names_prefix = "activity_"
+    ) %>% 
+  mutate(
+    day_tool = day,
+    day_tool = recode(day, "Monday" = "1" ,"Tuesday" =  "2", "Wednesday" = "3", "Thursday" = "4", "Friday" = "5", "Saturday" = "6", "Sunday" = "7"),
+    weekday = case_when(
+      day_tool <= 5 ~ "weekday",
+      day_tool > 5 ~ "weekend",
+      TRUE ~ ""),
+    minutecount_in_24_hours = as.numeric(minutecount_in_24_hours )
+    ) %>% 
+  select(-day_tool)
+show(accel_tidy)
 ```
+
+_Comment:_ accel_tidy data includes `r nrow(accel_tidy)` rows and `r ncol(accel_tidy)` columns, which is five weeks of accelerometer data collected on a 63 year-old male with BMI 25, who was admitted to the Advanced Cardiac Care Center of Columbia University Medical Center and diagnosed with congestive heart failure (CHF). 
+
+Variables as follows:
+
+week : which week that data was collected
+
+day_id : which day that data was collected
+
+day : day of the week that data was collected
+
+minutecount_in_24_hours : the minute in the day that data was collected
+
+activity_count :  activity counts for each minute of a 24-hour day starting at midnight
+
+weekday: whether the day collecting data was weekday or weekend
+
+
+b) Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
+
+```{r 3b, message = FALSE, warning = FALSE}
+#create a table showing totals
+total_overday = accel_tidy %>%
+  group_by(week, day) %>% 
+  summarize(total_of_day = sum(activity_count)) %>% 
+  knitr::kable()
+total_overday
+```
+
+_comment:_ Looking at the table, it is obvious that on week 4 and week 5, the activity count drops to 1440, which is 1 per minute. Besides this, there exists no apparent trend.
+
+c) Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
+
+```{r 3c, warning = FALSE, message = FALSE}
+accel_tidy %>% 
+  ggplot(aes(x = minutecount_in_24_hours, y = activity_count, color = day)) + 
+  geom_smooth(method = "loess",se = FALSE) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(
+    title = "24-Hours Activity Count",
+    x = "Time in minutes",
+    y = "Activity Count",
+    caption = "Data from accel_data"
+  ) + 
+  scale_x_continuous(
+    breaks = c(0, 180, 360, 540, 720, 900, 1080, 1260, 1440), 
+    labels = c("12AM", "3AM", "6AM", "9AM", "12PM", "3PM", "6PM", "9PM", "11:59PM"),
+    limits = c(0, 1440)
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+_Comment:_ We could find that for most day in the week except Sunday and Tuesday, the activity count has two peak values. One is always around 9AM to 12PM and the other one is around 6PM. Lowest activity count happens in 12AM every day and ascends increasing until 9AM, fluctuates during daytime and descends after 6PM except Friday.
